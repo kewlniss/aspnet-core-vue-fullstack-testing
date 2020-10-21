@@ -5,16 +5,34 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using FullStackTesting.Web.Api.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
 {
-    public class EmployeeControllerTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class EmployeeControllerTests : IClassFixture<CustomWebApplicationFactory<TestStartup>>
     {
         private readonly HttpClient _client;
 
-        public EmployeeControllerTests(CustomWebApplicationFactory<Startup> factory)
+        public EmployeeControllerTests(CustomWebApplicationFactory<TestStartup> factory)
         {
-            _client = factory.CreateClient();
+            var f = factory.WithWebHostBuilder(builder =>
+            {
+                builder
+                    .UseEnvironment("tests")
+                    .UseUrls("http://*:9876")
+                    .UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api"));
+
+                builder.ConfigureTestServices(services =>
+                {
+                    services.AddMvc().AddApplicationPart(typeof(Startup).Assembly);
+                });
+            });
+
+            _client = f.CreateClient();
         }
 
         [Fact]
@@ -22,6 +40,24 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
         {
             // The endpoint or route of the controller action
             var httpResponse = await _client.GetAsync("/api/Employee/GetAllEmployeesAsync");
+
+            // Must be successful
+            httpResponse.EnsureSuccessStatusCode();
+
+            // Deserialize and examine results
+            var stringResponse = await httpResponse.Content.ReadAsStringAsync();
+            var employees = JsonConvert.DeserializeObject<List<Employee>>(stringResponse);
+
+            Assert.Contains(employees, e => e.FirstName.Equals("Matt") && e.LastName.Equals("Areddia"));
+            Assert.Contains(employees, e => e.FirstName.Equals("Jeremy") && e.LastName.Equals("Wu"));
+        }
+
+        [Fact]
+        [Authorize]
+        public async Task CanGetAllEmployeesRestrictedAsync()
+        {
+            // The endpoint or route of the controller action
+            var httpResponse = await _client.GetAsync("/api/Employee/GetAllEmployeesRestrictedAsync");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();

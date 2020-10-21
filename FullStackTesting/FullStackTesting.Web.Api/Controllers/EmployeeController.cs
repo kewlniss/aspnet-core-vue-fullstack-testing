@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using FullStackTesting.Web.Api.Models;
 using FullStackTesting.Web.Api.Extensions;
 using FullStackTesting.Web.Api.Persistence;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FullStackTesting.Web.Api.Controllers
 {
@@ -27,6 +28,14 @@ namespace FullStackTesting.Web.Api.Controllers
             var employees = await _employeeRepo.GetAllAsync();
             return Ok(employees);
         }
+
+        [Authorize]
+        public async Task<IActionResult> GetAllEmployeesRestrictedAsync()
+        {
+            var employees = await _employeeRepo.GetAllAsync();
+            return Ok(employees);
+        }
+
 
         // GET api/Employee/GetEmployeeByIdAsync?id=3
         [HttpGet]

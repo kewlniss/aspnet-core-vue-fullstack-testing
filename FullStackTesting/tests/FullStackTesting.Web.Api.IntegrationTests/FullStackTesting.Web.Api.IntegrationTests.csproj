@@ -22,4 +22,10 @@
     <ProjectReference Include="..\..\FullStackTesting.Web.Api\FullStackTesting.Web.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="CoveCommerce.Domain">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Domain\bin\Debug\netcoreapp3.1\CoveCommerce.Domain.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

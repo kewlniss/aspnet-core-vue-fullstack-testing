@@ -18,9 +18,28 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.8" />
     <PackageReference Include="VueCliMiddleware" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CoveCommerce.Domain">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Domain\bin\Debug\netcoreapp3.1\CoveCommerce.Domain.dll</HintPath>
+    </Reference>
+    <Reference Include="CoveCommerce.Interfaces">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Domain\bin\Debug\netcoreapp3.1\CoveCommerce.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="CoveCommerce.Interfaces.Internal">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Repository.Dapper\bin\Debug\netcoreapp3.1\CoveCommerce.Interfaces.Internal.dll</HintPath>
+    </Reference>
+    <Reference Include="CoveCommerce.Store.Dapper">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Repository.Dapper\bin\Debug\netcoreapp3.1\CoveCommerce.Store.Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="GlobalCove.SharedKernel">
+      <HintPath>F:\projects\globalcove\CC\CC10\CoveCommerce.Domain\bin\Debug\netcoreapp3.1\GlobalCove.SharedKernel.dll</HintPath>
+    </Reference>
   </ItemGroup>
   
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

@@ -11,6 +11,14 @@ using Microsoft.AspNetCore.SpaServices;
 using Microsoft.Extensions.Configuration;
 using FullStackTesting.Web.Api.Persistence;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using CoveCommerce.Domain.User;
+using CoveCommerce.Store.Dapper;
+using CoveCommerce.Domain;
 
 namespace FullStackTesting.Web.Api
 {
@@ -33,6 +41,12 @@ namespace FullStackTesting.Web.Api
             // Register the in-memory db (Data is seeded in Main method of the Program.cs now).
             services.AddDbContext<AppDbContext>(context => context.UseInMemoryDatabase("EmployeeMemoryDB"));
 
+            services.AddScoped<IUserStore<User>, UserStore>();
+            services.AddScoped<IRoleStore<Role>, RoleStore>();
+            services.AddScoped<ICCUserStore<User>, UserStore>();
+            services.AddScoped<IUserEmailStore<User>, UserStore>();
+            services.AddScoped<IUserPasswordStore<User>, UserStore>();
+
             // Registered a scoped EmployeeRepository service (DI into EmployeeController)
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
@@ -42,6 +56,14 @@ namespace FullStackTesting.Web.Api
                     .AllowAnyHeader()
                     .AllowAnyMethod()));
 
+
+            ConfigureIdentity(services);
+
+            services.AddAuthorization(config =>
+            {
+                config.AddPolicy(Res.Claims.General, policy => policy.RequireClaim(Res.Claims.Audience, Res.Claims.General));
+            });
+
             // Register RazorPages/Controllers
             services.AddControllers();
 
@@ -50,6 +72,47 @@ namespace FullStackTesting.Web.Api
 
             // In production, the Vue files will be served from this directory
             services.AddSpaStaticFiles(configuration => configuration.RootPath = $"{_spaSourcePath}/dist");
+        }
+
+        public virtual void ConfigureIdentity(IServiceCollection services)
+        {
+            services.AddIdentity<User, Role>(i =>
+            {
+                //do requirements here ...
+                //need to be able to override this at client level...
+                //i.Password.RequireDigit = true;
+
+            })
+            //for resetpassword, etc -- https://stackoverflow.com/questions/35434427/adddefaulttokenproviders-whats-that-and-how-to-use-those-default-providers
+            .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(config =>
+            {
+            });
+
+            services.AddAuthentication(options => // JwtBearerDefaults.AuthenticationScheme
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = options.DefaultSignInScheme = options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ClockSkew = TimeSpan.FromMinutes(5),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("BACE11A5C27E9A9753FB4BFB3DB1B769D8E77EFB4FA4363A41FC49DA519A14447A95311481D2C8CB42C4A4C")),
+                        RequireSignedTokens = true,
+                        RequireExpirationTime = true,
+                        ValidAudience = "Api",
+                        ValidIssuer = "http://localhost:5000",
+                        ValidateIssuer = true,
+                        ValidateLifetime = true,
+                        ValidateAudience = true,
+                    };
+                });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -88,6 +151,10 @@ namespace FullStackTesting.Web.Api
             app.UseSpaStaticFiles();
             app.UseRouting();
 
+            app.UseAuthentication();
+
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
 
@@ -97,12 +164,13 @@ namespace FullStackTesting.Web.Api
                        "{*path}",
                        new SpaOptions { SourcePath = _spaSourcePath },
                        "serve",
+                       //port: 5001,
                        regex: "running at"
                     );
                 }
                 else
                 {
-                    endpoints.MapFallbackToFile("index.html");
+                    endpoints.MapFallbackToFile("/index.html");
                 }
             });
 
