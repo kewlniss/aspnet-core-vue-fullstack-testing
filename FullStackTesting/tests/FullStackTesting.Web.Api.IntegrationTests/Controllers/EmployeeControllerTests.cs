@@ -13,33 +13,46 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
 {
-    public class EmployeeControllerTests : IClassFixture<CustomWebApplicationFactory<TestStartup>>
+    [Collection("Database and Test Server collection")]
+    public class EmployeeControllerTests // : IClassFixture<CustomWebApplicationFactory<TestStartup>>
     {
-        private readonly HttpClient _client;
+        //private readonly HttpClient _client;
 
-        public EmployeeControllerTests(CustomWebApplicationFactory<TestStartup> factory)
+        // TODO: Move this to a base class and make it all still work...
+
+        private CustomWebApplicationFactory ts;
+        private DatabaseFixture db;
+
+        public EmployeeControllerTests(CustomWebApplicationFactory ts, DatabaseFixture db)
         {
-            var f = factory.WithWebHostBuilder(builder =>
-            {
-                builder
-                    .UseEnvironment("tests")
-                    .UseUrls("http://*:9876")
-                    .UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api"));
-
-                builder.ConfigureTestServices(services =>
-                {
-                    services.AddMvc().AddApplicationPart(typeof(Startup).Assembly);
-                });
-            });
-
-            _client = f.CreateClient();
+            this.ts = ts;
+            this.db = db;
         }
+
+
+        //public EmployeeControllerTests(CustomWebApplicationFactory<TestStartup> factory)
+        //{
+        //    var f = factory.WithWebHostBuilder(builder =>
+        //    {
+        //        builder
+        //            .UseEnvironment("tests")
+        //            .UseUrls("http://*:9876")
+        //            .UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api"));
+
+        //        builder.ConfigureTestServices(services =>
+        //        {
+        //            services.AddMvc().AddApplicationPart(typeof(Startup).Assembly);
+        //        });
+        //    });
+
+        //    _client = f.CreateClient();
+        //}
 
         [Fact]
         public async Task CanGetAllEmployeesAsync()
         {
             // The endpoint or route of the controller action
-            var httpResponse = await _client.GetAsync("/api/Employee/GetAllEmployeesAsync");
+            var httpResponse = await ts.Client.GetAsync("/api/Employee/GetAllEmployeesAsync");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();
@@ -57,7 +70,7 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
         public async Task CanGetAllEmployeesRestrictedAsync()
         {
             // The endpoint or route of the controller action
-            var httpResponse = await _client.GetAsync("/api/Employee/GetAllEmployeesRestrictedAsync");
+            var httpResponse = await ts.Client.GetAsync("/api/Employee/GetAllEmployeesRestrictedAsync");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();
@@ -75,7 +88,7 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
         {
             // The endpoint or route of the controller action
             const int targetId = 5;
-            var httpResponse = await _client.GetAsync($"/api/Employee/GetEmployeeByIdAsync?id={targetId}");
+            var httpResponse = await ts.Client.GetAsync($"/api/Employee/GetEmployeeByIdAsync?id={targetId}");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();
@@ -104,7 +117,7 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
 
             // The endpoint or route of the controller action (AddEmployeeAsync) with StringContent comprised of the employee to add
             var addEmployeeStringContent = new StringContent(JsonConvert.SerializeObject(addEmployee), Encoding.UTF8, "application/json");
-            var httpResponse = await _client.PostAsync($"/api/Employee/AddEmployeeAsync?id={addEmployee.Id}", addEmployeeStringContent);
+            var httpResponse = await ts.Client.PostAsync($"/api/Employee/AddEmployeeAsync?id={addEmployee.Id}", addEmployeeStringContent);
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();
@@ -135,11 +148,11 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
             var updateEmployeeStringContent = new StringContent(JsonConvert.SerializeObject(updateEmployee), Encoding.UTF8, "application/json");
 
             // Must be successful
-            using (var httpPutResponse = await _client.PutAsync($"/api/Employee/UpdateEmployeeAsync?id={updateEmployee.Id}", updateEmployeeStringContent))
+            using (var httpPutResponse = await ts.Client.PutAsync($"/api/Employee/UpdateEmployeeAsync?id={updateEmployee.Id}", updateEmployeeStringContent))
                 httpPutResponse.EnsureSuccessStatusCode();
 
             // The endpoint or route of the controller action (GetEmployeeByIdAsync) - the employee we updated
-            var httpResponse = await _client.GetAsync($"/api/Employee/GetEmployeeByIdAsync?id={updateEmployee.Id}");
+            var httpResponse = await ts.Client.GetAsync($"/api/Employee/GetEmployeeByIdAsync?id={updateEmployee.Id}");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();
@@ -161,11 +174,11 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
             const int targetId = 2;
 
             // Must be successful
-            using (var httpDeleteResponse = await _client.DeleteAsync($"/api/Employee/DeleteEmployeeAsync?id={targetId}"))
+            using (var httpDeleteResponse = await ts.Client.DeleteAsync($"/api/Employee/DeleteEmployeeAsync?id={targetId}"))
                 httpDeleteResponse.EnsureSuccessStatusCode();
 
             // The endpoint or route of the controller action (GetAllEmployeesAsync)
-            var httpResponse = await _client.GetAsync("/api/Employee/GetAllEmployeesAsync");
+            var httpResponse = await ts.Client.GetAsync("/api/Employee/GetAllEmployeesAsync");
 
             // Must be successful
             httpResponse.EnsureSuccessStatusCode();

@@ -1,20 +1,50 @@
-﻿using System;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc.Testing;
-using FullStackTesting.Web.Api.Persistence;
-using Microsoft.Extensions.DependencyInjection;
+﻿using FullStackTesting.Web.Api.Persistence;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Net.Http;
 
 namespace FullStackTesting.Web.Api.IntegrationTests
 {
-    public class CustomWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
+    public class CustomWebApplicationFactory : WebApplicationFactory<TestStartup>
     {
+        public TestServer TestServer { get; }
+        public HttpClient Client { get; }
+
+        public CustomWebApplicationFactory()
+        {
+            var webHostBuilder = CreateWebHostBuilder()
+                .UseEnvironment("tests")
+                .UseUrls("http://*:9876")
+                //don't use my test's content root, use the real one instead...
+                .UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api"));
+
+            webHostBuilder.ConfigureTestServices(services =>
+            {
+                services.AddMvc().AddApplicationPart(typeof(Startup).Assembly);
+            });
+
+            TestServer = new TestServer(webHostBuilder);
+            Client = TestServer.CreateClient();
+        }
+
         protected override IWebHostBuilder CreateWebHostBuilder()
         {
-            return WebHost.CreateDefaultBuilder(null)
-                .UseStartup<TStartup>();
+            var builder = WebHost.CreateDefaultBuilder(null)
+                .UseStartup<TestStartup>();
+            //.ConfigureKestrel((context, options) => options.ConfigureEndpoints());
+
+
+            ConfigureWebHost(builder);
+
+            return builder;
         }
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -37,7 +67,7 @@ namespace FullStackTesting.Web.Api.IntegrationTests
                 {
                     var scopedServices = scope.ServiceProvider;
                     var appDb = scopedServices.GetRequiredService<AppDbContext>();
-                    var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory<TStartup>>>();
+                    var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory>>();
 
                     // Ensure the database is created.
                     appDb.Database.EnsureCreated();

@@ -56,7 +56,6 @@ namespace FullStackTesting.Web.Api
                     .AllowAnyHeader()
                     .AllowAnyMethod()));
 
-
             ConfigureIdentity(services);
 
             services.AddAuthorization(config =>
@@ -157,21 +156,25 @@ namespace FullStackTesting.Web.Api
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
+                endpoints.MapDefaultControllerRoute();
 
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    endpoints.MapToVueCliProxy(
-                       "{*path}",
-                       new SpaOptions { SourcePath = _spaSourcePath },
-                       "serve",
-                       //port: 5001,
-                       regex: "running at"
-                    );
-                }
-                else
-                {
-                    endpoints.MapFallbackToFile("/index.html");
-                }
+                //if (System.Diagnostics.Debugger.IsAttached)
+                //{
+                //    //endpoints.MapToVueCliProxy(
+                //    //   "{*path}",
+                //    //   new SpaOptions { SourcePath = _spaSourcePath },
+                //    //   "serve",
+                //    //   //port: 5001,
+                //    //   regex: "running at"
+                //    //);
+                //}
+                //else
+                //{
+                //    endpoints.MapFallbackToFile("/index.html");
+                //}
+
+                endpoints.MapFallbackToFile("/index.html");
+
             });
 
             app.UseSpa(spa =>
