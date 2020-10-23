@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using VueCliMiddleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using FullStackTesting.Web.Api.Models;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.SpaServices;
 using Microsoft.Extensions.Configuration;
 using FullStackTesting.Web.Api.Persistence;
 using Microsoft.Extensions.DependencyInjection;
