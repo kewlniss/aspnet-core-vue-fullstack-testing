@@ -155,23 +155,9 @@ namespace FullStackTesting.Web.Api
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => {
+                endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapDefaultControllerRoute();
-
-                //if (System.Diagnostics.Debugger.IsAttached)
-                //{
-                //    //endpoints.MapToVueCliProxy(
-                //    //   "{*path}",
-                //    //   new SpaOptions { SourcePath = _spaSourcePath },
-                //    //   "serve",
-                //    //   //port: 5001,
-                //    //   regex: "running at"
-                //    //);
-                //}
-                //else
-                //{
-                //    endpoints.MapFallbackToFile("/index.html");
-                //}
 
                 endpoints.MapFallbackToFile("/index.html");
 

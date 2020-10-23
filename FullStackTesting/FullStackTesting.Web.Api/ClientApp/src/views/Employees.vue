@@ -107,7 +107,9 @@ export default class Employees extends Vue {
   }
 
   public deleteEmployee(employee: IEmployee): void {
-    if (this.loading) return;
+    if (this.loading) {
+      return;
+    }
 
     this.loading = true;
 
@@ -129,7 +131,9 @@ export default class Employees extends Vue {
   }
 
   public handleGetEmployees(): void {
-    if (this.loading) return;
+    if (this.loading) {
+      return;
+    }
 
     this.loading = true;
 
