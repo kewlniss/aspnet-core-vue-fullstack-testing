@@ -10,16 +10,14 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore;
+using System.Net;
 
 namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
 {
     [Collection("Database and Test Server collection")]
-    public class EmployeeControllerTests // : IClassFixture<CustomWebApplicationFactory<TestStartup>>
+    public class EmployeeControllerTests
     {
-        //private readonly HttpClient _client;
-
-        // TODO: Move this to a base class and make it all still work...
-
         private CustomWebApplicationFactory ts;
         private DatabaseFixture db;
 
@@ -28,25 +26,6 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
             this.ts = ts;
             this.db = db;
         }
-
-
-        //public EmployeeControllerTests(CustomWebApplicationFactory<TestStartup> factory)
-        //{
-        //    var f = factory.WithWebHostBuilder(builder =>
-        //    {
-        //        builder
-        //            .UseEnvironment("tests")
-        //            .UseUrls("http://*:9876")
-        //            .UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api"));
-
-        //        builder.ConfigureTestServices(services =>
-        //        {
-        //            services.AddMvc().AddApplicationPart(typeof(Startup).Assembly);
-        //        });
-        //    });
-
-        //    _client = f.CreateClient();
-        //}
 
         [Fact]
         public async Task CanGetAllEmployeesAsync()
@@ -188,6 +167,43 @@ namespace FullStackTesting.Web.Api.IntegrationTests.Controllers
             var employees = JsonConvert.DeserializeObject<List<Employee>>(stringResponse);
 
             Assert.DoesNotContain(employees, e => e.Id.Equals(targetId) && e.FirstName.Equals("Jane") && e.LastName.Equals("Doe"));
+        }
+
+
+        [Fact]
+        public async Task CanGetHomePage()
+        {
+            //// Arrange
+            //var webHostBuilder = Program.CreateWebHostBuilder(Array.Empty<string>())
+            //    .UseContentRoot(Path.GetFullPath("../../../../../../Clients/Demo"));
+
+            var webHostBuilder = WebHost.CreateDefaultBuilder<Startup>(null)
+                .UseStartup<TestStartup>()
+                .UseEnvironment("tests")
+                //.UseUrls("http://*:5000")
+                //don't use my test's content root, use the real one instead...
+                ;//.UseContentRoot(Path.GetFullPath("../../../../../FullStackTesting.Web.Api/ClientApp"));
+
+            //.UseSpa(spa =>
+            //    {
+            //        spa.Options.SourcePath = "ClientApp";
+            //    })
+
+
+            var server = new TestServer(webHostBuilder);
+            var client = server.CreateClient();
+
+            // Act
+            // fails with just / 
+            // also added in the UseProxyToSpaDevelopmentServer to Startup.cs
+            var response = await ts.Client.GetAsync("/");
+
+            response.EnsureSuccessStatusCode();
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var stringResponse = await response.Content.ReadAsStringAsync();
         }
     }
 }

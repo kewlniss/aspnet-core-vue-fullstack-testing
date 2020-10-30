@@ -33,14 +33,13 @@ namespace FullStackTesting.Web.Api.IntegrationTests
 
             TestServer = new TestServer(webHostBuilder);
             Client = TestServer.CreateClient();
+            //Client = CreateDefaultClient();
         }
 
         protected override IWebHostBuilder CreateWebHostBuilder()
         {
             var builder = WebHost.CreateDefaultBuilder(null)
                 .UseStartup<TestStartup>();
-            //.ConfigureKestrel((context, options) => options.ConfigureEndpoints());
-
 
             ConfigureWebHost(builder);
 

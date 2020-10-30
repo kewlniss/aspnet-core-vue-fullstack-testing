@@ -64,6 +64,10 @@ namespace FullStackTesting.Web.Api
             // Register RazorPages/Controllers
             services.AddControllers();
 
+            services.AddRazorPages();
+
+            services.Configure<Microsoft.AspNetCore.Mvc.RazorPages.RazorPagesOptions>(options => options.RootDirectory = "/Pages");
+
             // IMPORTANT CONFIG CHANGE IN 3.0 - 'Async' suffix in action names get stripped by default - so, to access them by full name with 'Async' part - opt out of this feature'.
             services.AddMvc(options => options.SuppressAsyncSuffixInActionNames = false);
 
@@ -157,13 +161,13 @@ namespace FullStackTesting.Web.Api
                 endpoints.MapControllers();
                 endpoints.MapDefaultControllerRoute();
 
-                endpoints.MapFallbackToFile("/index.html");
-
+                //endpoints.MapFallbackToFile("/index.html");
             });
 
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
+                spa.UseProxyToSpaDevelopmentServer("http://localhost:5001");
             });
         }
     }
